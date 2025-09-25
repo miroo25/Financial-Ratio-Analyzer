@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n-key="appTitle">تحليل النسب المالية</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Dark background */
+            color: #e2e8f0; /* Light text */
+        }
+        .container-wrapper {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+        .input-card, .ratio-card {
+            background-color: #1e293b; /* Dark card background */
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            transition: transform 0.3s ease-in-out;
+            border: 1px solid #334155;
+        }
+        .input-card:hover, .ratio-card:hover {
+            transform: translateY(-5px);
+        }
+        input[type="text"] {
+            background-color: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            width: 100%;
+            color: #e2e8f0;
+            transition: all 0.2s;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #60a5fa; /* Blue focus */
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.25);
+        }
+        .calculate-btn {
+            background-color: #3b82f6; /* Blue button */
+            color: #ffffff;
+            font-weight: 700;
+            padding: 1rem 3rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .calculate-btn:hover {
+            background-color: #2563eb;
+            transform: translateY(-2px);
+        }
+        .results-section {
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+        .ratio-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #60a5fa; /* Highlight color */
+        }
+        .language-switcher {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+        }
+        .language-switcher button {
+            background-color: #334155;
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+        .language-switcher button:hover {
+            background-color: #475569;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+        .logo-icon {
+            width: 4rem;
+            height: 4rem;
+            background-color: #60a5fa;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+        }
+        .logo-bars {
+            display: flex;
+            height: 2.5rem;
+            align-items: flex-end;
+            gap: 0.25rem;
+            position: relative;
+            top: 0.25rem;
+        }
+        .bar {
+            width: 0.75rem;
+            background-color: #1e293b;
+            border-radius: 0.25rem;
+            animation: grow 1.5s ease-in-out infinite;
+        }
+        .bar-1 { height: 1.5rem; animation-delay: 0.1s; }
+        .bar-2 { height: 2.2rem; animation-delay: 0.2s; }
+        .bar-3 { height: 1.8rem; animation-delay: 0.3s; }
+        @keyframes grow {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.2); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200">
+        
+    <!-- Language Switcher -->
+    <div class="language-switcher flex gap-2">
+        <button onclick="setLanguage('ar')" class="py-1 px-3 rounded-md bg-gray-800 text-gray-200 hover:bg-gray-700">العربية</button>
+        <button onclick="setLanguage('en')" class="py-1 px-3 rounded-md bg-gray-800 text-gray-200 hover:bg-gray-700">English</button>
+    </div>
+
+    <div class="container-wrapper">
+        <header class="text-center mb-10">
+            <div class="logo">
+                <div class="logo-icon">
+                    <div class="logo-bars">
+                        <div class="bar bar-1"></div>
+                        <div class="bar bar-2"></div>
+                        <div class="bar bar-3"></div>
+                    </div>
+                </div>
+            </div>
+            <h1 class="text-4xl font-bold text-gray-100 mb-2" data-i18n-key="mainTitle">محلل النسب المالية</h1>
+            <p class="text-lg text-gray-400" data-i18n-key="mainDescription">أداة بسيطة لاستخراج النسب المالية من بيانات قوائمك</p>
+        </header>
+
+        <!-- Input Sections -->
+        <main class="grid md:grid-cols-3 gap-6 mb-8">
+            <!-- قائمة الدخل -->
+            <section class="input-card">
+                <h2 class="text-2xl font-semibold text-gray-100 mb-4" data-i18n-key="incomeStatementTitle">قائمة الدخل</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="sales" class="block text-sm font-medium text-gray-400" data-i18n-key="salesLabel">المبيعات</label>
+                        <input type="text" id="sales" oninput="formatNumber(this)" data-i18n-placeholder="salesPlaceholder" placeholder="أدخل المبيعات" class="mt-1">
+                    </div>
+                    <div>
+                        <label for="cogs" class="block text-sm font-medium text-gray-400" data-i18n-key="cogsLabel">تكلفة البضاعة المباعة</label>
+                        <input type="text" id="cogs" oninput="formatNumber(this)" data-i18n-placeholder="cogsPlaceholder" placeholder="أدخل تكلفة البضاعة المباعة" class="mt-1">
+                    </div>
+                    <div>
+                        <label for="netIncome" class="block text-sm font-medium text-gray-400" data-i18n-key="netIncomeLabel">صافي الدخل</label>
+                        <input type="text" id="netIncome" oninput="formatNumber(this)" data-i18n-placeholder="netIncomePlaceholder" placeholder="أدخل صافي الدخل" class="mt-1">
+                    </div>
+                    <div>
+                        <label for="operatingIncome" class="block text-sm font-medium text-gray-400" data-i18n-key="operatingIncomeLabel">الربح التشغيلي (EBIT)</label>
+                        <input type="text" id="operatingIncome" oninput="formatNumber(this)" data-i18n-placeholder="operatingIncomePlaceholder" placeholder="أدخل الربح التشغيلي" class="mt-1">
+                    </div>
+                    <div>
+                        <label for="interestExpense" class="block text-sm font-medium text-gray-400" data-i18n-key="interestExpenseLabel">مصروف الفائدة</label>
+                        <input type="text" id="interestExpense" oninput="formatNumber(this)" data-i18n-placeholder="interestExpensePlaceholder" placeholder="أدخل مصروف الفائدة" class="mt-1">
+                    </div>
+                    <div>
+                        <label for="depreciationAmortization" class="block text-sm font-medium text-gray-400" data-i18n-key="depreciationAmortizationLabel">الاهلاك والإطفاء</label>
+                        <input type="text" id="depreciationAmortization" oninput="formatNumber(this)" data-i18n-placeholder="depreciationAmortizationPlaceholder" placeholder="أدخل الاهلاك والإطفاء" class="mt-1">
+                    </div>
+                </div>
+            </section>
+
+            <!-- قائمة المركز المالي -->
+            <section class="input-card">
+                <h2 class="text-2xl font-semibold text-gray-100 mb-4" data-i18n-key="balanceSheetTitle">قائمة المركز المالي</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="cash" class="block text-sm font-medium text-gray-400" data-i18n-key="cashLabel">النقدية</label>
+                        <input type="text" id="cash" oninput="formatNumber(this)" data-i18n-placeholder="cashPlaceholder" placeholder="أدخل النقدية" class="mt-1">
+                    </div>
+                    <div>
+                        <label for="currentAssets" class="block text-sm font-medium text-gray-400" data-i18n-key="currentAssetsLabel">الأصول المتداولة</label>
+                        <input type="text" id="currentAssets" oninput="formatNumber(this)" data-i18n-placeholder="currentAssetsPlaceholder" placeholder="أدخل الأصول المتداولة" class="mt-1">
+                    </div>
+                    <div>
+                        <label for="averageReceivables" class="block text-sm font-medium text-gray-400" data-i18n-key="averageReceivablesLabel">متوسط الذمم المدينة</label>
+                        <input type="text" id="averageReceivables" oninput="formatNumber(this)" data-i18n-placeholder="averageReceivablesPlaceholder" placeholder="أدخل متوسط الذمم المدينة" class="mt-1">
+                    </div>
+                    <div>
+                        <label for="inventory" class="block text-sm font-medium text-gray-400" data-i18n-key="inventoryLabel">المخزون</label>
+                        <input type="text" id="inventory" oninput="formatNumber(this)" data-i18n-placeholder="inventoryPlaceholder" placeholder="أدخل المخزون" class="mt-1">
+                    </div>
+                    <div>
+                        <label for="averageInventory" class="block text-sm font-medium text-gray-400" data-i18n-key="averageInventoryLabel">متوسط المخزون</label>
+                        <input type="text" id="averageInventory" oninput="formatNumber(this)" data-i18n-placeholder="averageInventoryPlaceholder" placeholder="أدخل متوسط المخزون" class="mt-1">
+                    </div>
+                    <div>
+                        <label for="currentLiabilities" class="block text-sm font-medium text-gray-400" data-i18n-key="currentLiabilitiesLabel">الالتزامات المتداولة</label>
+                        <input type="text" id="currentLiabilities" oninput="formatNumber(this)" data-i18n-placeholder="currentLiabilitiesPlaceholder" placeholder="أدخل الالتزامات المتداولة" class="mt-1">
+                    </div>
+                    <div>
+                        <label for="averagePayables" class="block text-sm font-medium text-gray-400" data-i18n-key="averagePayablesLabel">متوسط الذمم الدائنة</label>
+                        <input type="text" id="averagePayables" oninput="formatNumber(this)" data-i18n-placeholder="averagePayablesPlaceholder" placeholder="أدخل متوسط الذمم الدائنة" class="mt-1">
+                    </div>
+                    <div>
+                        <label for="totalAssets" class="block text-sm font-medium text-gray-400" data-i18n-key="totalAssetsLabel">إجمالي الأصول</label>
+                        <input type="text" id="totalAssets" oninput="formatNumber(this)" data-i18n-placeholder="totalAssetsPlaceholder" placeholder="أدخل إجمالي الأصول" class="mt-1">
+                    </div>
+                    <div>
+                        <label for="totalLiabilities" class="block text-sm font-medium text-gray-400" data-i18n-key="totalLiabilitiesLabel">إجمالي الالتزامات</label>
+                        <input type="text" id="totalLiabilities" oninput="formatNumber(this)" data-i18n-placeholder="totalLiabilitiesPlaceholder" placeholder="أدخل إجمالي الالتزامات" class="mt-1">
+                    </div>
+                    <div>
+                        <label for="totalEquity" class="block text-sm font-medium text-gray-400" data-i18n-key="totalEquityLabel">إجمالي حقوق الملكية</label>
+                        <input type="text" id="totalEquity" oninput="formatNumber(this)" data-i18n-placeholder="totalEquityPlaceholder" placeholder="أدخل إجمالي حقوق الملكية" class="mt-1">
+                    </div>
+                </div>
+            </section>
+
+            <!-- قائمة التدفقات النقدية -->
+            <section class="input-card">
+                <h2 class="text-2xl font-semibold text-gray-100 mb-4" data-i18n-key="cashFlowTitle">قائمة التدفقات النقدية</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="cashFromOperations" class="block text-sm font-medium text-gray-400" data-i18n-key="cashFromOperationsLabel">النقدية من الأنشطة التشغيلية</label>
+                        <input type="text" id="cashFromOperations" oninput="formatNumber(this)" data-i18n-placeholder="cashFromOperationsPlaceholder" placeholder="أدخل النقدية من الأنشطة التشغيلية" class="mt-1">
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Calculate Button -->
+        <div class="text-center my-10">
+            <button id="calculateBtn" class="calculate-btn" data-i18n-key="calculateBtn">حساب النسب</button>
+        </div>
+
+        <!-- Results Section -->
+        <section id="results" class="results-section">
+            <h2 class="col-span-full text-3xl font-bold text-gray-100 mb-4" data-i18n-key="resultsTitle">النسب المالية المستخرجة</h2>
+            
+            <!-- Liquidity Ratios -->
+            <div class="ratio-card">
+                <h3 class="text-xl font-medium text-gray-300 mb-4" data-i18n-key="liquidityRatiosTitle">نسب السيولة</h3>
+                <div class="mb-4">
+                    <p class="text-sm text-gray-400" data-i18n-key="currentRatioLabel">النسبة المتداولة</p>
+                    <p id="currentRatio" class="ratio-value"></p>
+                </div>
+                <div class="mb-4">
+                    <p class="text-sm text-gray-400" data-i18n-key="quickRatioLabel">النسبة السريعة</p>
+                    <p id="quickRatio" class="ratio-value"></p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-400" data-i18n-key="cashRatioLabel">نسبة النقدية</p>
+                    <p id="cashRatio" class="ratio-value"></p>
+                </div>
+            </div>
+
+            <!-- Profitability Ratios -->
+            <div class="ratio-card">
+                <h3 class="text-xl font-medium text-gray-300 mb-4" data-i18n-key="profitabilityRatiosTitle">نسب الربحية</h3>
+                <div class="mb-4">
+                    <p class="text-sm text-gray-400" data-i18n-key="grossProfitMarginLabel">هامش الربح الإجمالي</p>
+                    <p id="grossProfitMargin" class="ratio-value"></p>
+                </div>
+                <div class="mb-4">
+                    <p class="text-sm text-gray-400" data-i18n-key="netProfitMarginLabel">هامش صافي الربح</p>
+                    <p id="netProfitMargin" class="ratio-value"></p>
+                </div>
+                <div class="mb-4">
+                    <p class="text-sm text-gray-400" data-i18n-key="operatingProfitMarginLabel">هامش الربح التشغيلي</p>
+                    <p id="operatingProfitMargin" class="ratio-value"></p>
+                </div>
+                <div class="mb-4">
+                    <p class="text-sm text-gray-400" data-i18n-key="ebitdaMarginLabel">هامش الأرباح قبل الفوائد والضرائب والإهلاك (EBITDA Margin)</p>
+                    <p id="ebitdaMargin" class="ratio-value"></p>
+                </div>
+                <div class="mb-4">
+                    <p class="text-sm text-gray-400" data-i18n-key="roaLabel">العائد على الأصول (ROA)</p>
+                    <p id="roa" class="ratio-value"></p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-400" data-i18n-key="roeLabel">العائد على حقوق الملكية (ROE)</p>
+                    <p id="roe" class="ratio-value"></p>
+                </div>
+            </div>
+
+            <!-- Activity Ratios -->
+            <div class="ratio-card">
+                <h3 class="text-xl font-medium text-gray-300 mb-4" data-i18n-key="activityRatiosTitle">نسب النشاط</h3>
+                <div class="mb-4">
+                    <p class="text-sm text-gray-400" data-i18n-key="inventoryTurnoverLabel">معدل دوران المخزون</p>
+                    <p id="inventoryTurnover" class="ratio-value"></p>
+                </div>
+                <div class="mb-4">
+                    <p class="text-sm text-gray-400" data-i18n-key="totalAssetTurnoverLabel">معدل دوران إجمالي الأصول</p>
+                    <p id="totalAssetTurnover" class="ratio-value"></p>
+                </div>
+                <div class="mb-4">
+                    <p class="text-sm text-gray-400" data-i18n-key="receivablesTurnoverLabel">معدل دوران الذمم المدينة</p>
+                    <p id="receivablesTurnover" class="ratio-value"></p>
+                </div>
+                <div class="mb-4">
+                    <p class="text-sm text-gray-400" data-i18n-key="dsoLabel">متوسط فترة التحصيل (DSO)</p>
+                    <p id="dso" class="ratio-value"></p>
+                </div>
+                 <div>
+                    <p class="text-sm text-gray-400" data-i18n-key="payablesTurnoverLabel">معدل دوران الدائنين</p>
+                    <p id="payablesTurnover" class="ratio-value"></p>
+                </div>
+            </div>
+
+            <!-- Leverage & Efficiency Ratios -->
+            <div class="ratio-card">
+                <h3 class="text-xl font-medium text-gray-300 mb-4" data-i18n-key="leverageRatiosTitle">نسب الرفع والكفاءة</h3>
+                <div class="mb-4">
+                    <p class="text-sm text-gray-400" data-i18n-key="debtToEquityRatioLabel">نسبة الدين إلى حقوق الملكية</p>
+                    <p id="debtToEquityRatio" class="ratio-value"></p>
+                </div>
+                <div class="mb-4">
+                    <p class="text-sm text-gray-400" data-i18n-key="debtRatioLabel">نسبة الدين</p>
+                    <p id="debtRatio" class="ratio-value"></p>
+                </div>
+                 <div class="mb-4">
+                    <p class="text-sm text-gray-400" data-i18n-key="interestCoverageRatioLabel">تغطية الفوائد</p>
+                    <p id="interestCoverageRatio" class="ratio-value"></p>
+                </div>
+                <div class="mb-4">
+                    <p class="text-sm text-gray-400" data-i18n-key="roceLabel">العائد على رأس المال العامل (ROCE)</p>
+                    <p id="roce" class="ratio-value"></p>
+                </div>
+                <div class="mb-4">
+                    <p class="text-sm text-gray-400" data-i18n-key="cccLabel">دورة التحويل النقدي (CCC)</p>
+                    <p id="ccc" class="ratio-value"></p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-400" data-i18n-key="operatingCashFlowRatioLabel">نسبة التدفق النقدي التشغيلي</p>
+                    <p id="operatingCashFlowRatio" class="ratio-value"></p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Error Message Container -->
+        <div id="errorMessage" class="hidden text-center bg-red-800 text-red-200 p-4 rounded-lg my-10">
+            <p data-i18n-key="errorMessage">الرجاء إدخال أرقام صحيحة في جميع الحقول المطلوبة.</p>
+        </div>
+    </div>
+
+    <script>
+        const translations = {
+            'ar': {
+                'appTitle': 'تحليل النسب المالية',
+                'mainTitle': 'محلل النسب المالية',
+                'mainDescription': 'أداة بسيطة لاستخراج النسب المالية من بيانات قوائمك',
+                'incomeStatementTitle': 'قائمة الدخل',
+                'salesLabel': 'المبيعات',
+                'salesPlaceholder': 'أدخل المبيعات',
+                'cogsLabel': 'تكلفة البضاعة المباعة',
+                'cogsPlaceholder': 'أدخل تكلفة البضاعة المباعة',
+                'netIncomeLabel': 'صافي الدخل',
+                'netIncomePlaceholder': 'أدخل صافي الدخل',
+                'operatingIncomeLabel': 'الربح التشغيلي (EBIT)',
+                'operatingIncomePlaceholder': 'أدخل الربح التشغيلي',
+                'interestExpenseLabel': 'مصروف الفائدة',
+                'interestExpensePlaceholder': 'أدخل مصروف الفائدة',
+                'depreciationAmortizationLabel': 'الاهلاك والإطفاء',
+                'depreciationAmortizationPlaceholder': 'أدخل الاهلاك والإطفاء',
+                'balanceSheetTitle': 'قائمة المركز المالي',
+                'cashLabel': 'النقدية',
+                'cashPlaceholder': 'أدخل النقدية',
+                'currentAssetsLabel': 'الأصول المتداولة',
+                'currentAssetsPlaceholder': 'أدخل الأصول المتداولة',
+                'averageReceivablesLabel': 'متوسط الذمم المدينة',
+                'averageReceivablesPlaceholder': 'أدخل متوسط الذمم المدينة',
+                'inventoryLabel': 'المخزون',
+                'inventoryPlaceholder': 'أدخل المخزون',
+                'averageInventoryLabel': 'متوسط المخزون',
+                'averageInventoryPlaceholder': 'أدخل متوسط المخزون',
+                'currentLiabilitiesLabel': 'الالتزامات المتداولة',
+                'currentLiabilitiesPlaceholder': 'أدخل الالتزامات المتداولة',
+                'averagePayablesLabel': 'متوسط الذمم الدائنة',
+                'averagePayablesPlaceholder': 'أدخل متوسط الذمم الدائنة',
+                'totalAssetsLabel': 'إجمالي الأصول',
+                'totalAssetsPlaceholder': 'أدخل إجمالي الأصول',
+                'totalLiabilitiesLabel': 'إجمالي الالتزامات',
+                'totalLiabilitiesPlaceholder': 'أدخل إجمالي الالتزامات',
+                'totalEquityLabel': 'إجمالي حقوق الملكية',
+                'totalEquityPlaceholder': 'أدخل إجمالي حقوق الملكية',
+                'cashFlowTitle': 'قائمة التدفقات النقدية',
+                'cashFromOperationsLabel': 'النقدية من الأنشطة التشغيلية',
+                'cashFromOperationsPlaceholder': 'أدخل النقدية من الأنشطة التشغيلية',
+                'calculateBtn': 'حساب النسب',
+                'resultsTitle': 'النسب المالية المستخرجة',
+                'liquidityRatiosTitle': 'نسب السيولة',
+                'currentRatioLabel': 'النسبة المتداولة',
+                'quickRatioLabel': 'النسبة السريعة',
+                'cashRatioLabel': 'نسبة النقدية',
+                'profitabilityRatiosTitle': 'نسب الربحية',
+                'grossProfitMarginLabel': 'هامش الربح الإجمالي',
+                'netProfitMarginLabel': 'هامش صافي الربح',
+                'operatingProfitMarginLabel': 'هامش الربح التشغيلي',
+                'ebitdaMarginLabel': 'هامش الأرباح قبل الفوائد والضرائب والإهلاك (EBITDA Margin)',
+                'roaLabel': 'العائد على الأصول (ROA)',
+                'roeLabel': 'العائد على حقوق الملكية (ROE)',
+                'activityRatiosTitle': 'نسب النشاط',
+                'inventoryTurnoverLabel': 'معدل دوران المخزون',
+                'totalAssetTurnoverLabel': 'معدل دوران إجمالي الأصول',
+                'receivablesTurnoverLabel': 'معدل دوران الذمم المدينة',
+                'dsoLabel': 'متوسط فترة التحصيل (DSO)',
+                'payablesTurnoverLabel': 'معدل دوران الدائنين',
+                'leverageRatiosTitle': 'نسب الرفع والكفاءة',
+                'debtToEquityRatioLabel': 'نسبة الدين إلى حقوق الملكية',
+                'debtRatioLabel': 'نسبة الدين',
+                'interestCoverageRatioLabel': 'تغطية الفوائد',
+                'roceLabel': 'العائد على رأس المال العامل (ROCE)',
+                'cccLabel': 'دورة التحويل النقدي (CCC)',
+                'operatingCashFlowRatioLabel': 'نسبة التدفق النقدي التشغيلي',
+                'errorMessage': 'الرجاء إدخال أرقام صحيحة في جميع الحقول المطلوبة.',
+                'formErrorMessage': 'حدث خطأ. الرجاء المحاولة مرة أخرى.'
+            },
+            'en': {
+                'appTitle': 'Financial Ratio Analyzer',
+                'mainTitle': 'Financial Ratio Analyzer',
+                'mainDescription': 'A simple tool to extract financial ratios from your statements',
+                'incomeStatementTitle': 'Income Statement',
+                'salesLabel': 'Sales',
+                'salesPlaceholder': 'Enter Sales',
+                'cogsLabel': 'Cost of Goods Sold (COGS)',
+                'cogsPlaceholder': 'Enter COGS',
+                'netIncomeLabel': 'Net Income',
+                'netIncomePlaceholder': 'Enter Net Income',
+                'operatingIncomeLabel': 'Operating Income (EBIT)',
+                'operatingIncomePlaceholder': 'Enter Operating Income',
+                'interestExpenseLabel': 'Interest Expense',
+                'interestExpensePlaceholder': 'Enter Interest Expense',
+                'depreciationAmortizationLabel': 'Depreciation & Amortization',
+                'depreciationAmortizationPlaceholder': 'Enter Depreciation & Amortization',
+                'balanceSheetTitle': 'Balance Sheet',
+                'cashLabel': 'Cash',
+                'cashPlaceholder': 'Enter Cash',
+                'currentAssetsLabel': 'Current Assets',
+                'currentAssetsPlaceholder': 'Enter Current Assets',
+                'averageReceivablesLabel': 'Average Receivables',
+                'averageReceivablesPlaceholder': 'Enter Average Receivables',
+                'inventoryLabel': 'Inventory',
+                'inventoryPlaceholder': 'Enter Inventory',
+                'averageInventoryLabel': 'Average Inventory',
+                'averageInventoryPlaceholder': 'Enter Average Inventory',
+                'currentLiabilitiesLabel': 'Current Liabilities',
+                'currentLiabilitiesPlaceholder': 'Enter Current Liabilities',
+                'averagePayablesLabel': 'Average Payables',
+                'averagePayablesPlaceholder': 'Enter Average Payables',
+                'totalAssetsLabel': 'Total Assets',
+                'totalAssetsPlaceholder': 'Enter Total Assets',
+                'totalLiabilitiesLabel': 'Total Liabilities',
+                'totalLiabilitiesPlaceholder': 'Enter Total Liabilities',
+                'totalEquityLabel': 'Total Equity',
+                'totalEquityPlaceholder': 'Enter Total Equity',
+                'cashFlowTitle': 'Cash Flow Statement',
+                'cashFromOperationsLabel': 'Cash from Operations',
+                'cashFromOperationsPlaceholder': 'Enter Cash from Operations',
+                'calculateBtn': 'Calculate Ratios',
+                'resultsTitle': 'Extracted Financial Ratios',
+                'liquidityRatiosTitle': 'Liquidity Ratios',
+                'currentRatioLabel': 'Current Ratio',
+                'quickRatioLabel': 'Quick Ratio',
+                'cashRatioLabel': 'Cash Ratio',
+                'profitabilityRatiosTitle': 'Profitability Ratios',
+                'grossProfitMarginLabel': 'Gross Profit Margin',
+                'netProfitMarginLabel': 'Net Profit Margin',
+                'operatingProfitMarginLabel': 'Operating Profit Margin',
+                'ebitdaMarginLabel': 'EBITDA Margin',
+                'roaLabel': 'Return on Assets (ROA)',
+                'roeLabel': 'Return on Equity (ROE)',
+                'activityRatiosTitle': 'Activity Ratios',
+                'inventoryTurnoverLabel': 'Inventory Turnover',
+                'totalAssetTurnoverLabel': 'Total Asset Turnover',
+                'receivablesTurnoverLabel': 'Receivables Turnover',
+                'dsoLabel': 'Days Sales Outstanding (DSO)',
+                'payablesTurnoverLabel': 'Payables Turnover',
+                'leverageRatiosTitle': 'Leverage & Efficiency Ratios',
+                'debtToEquityRatioLabel': 'Debt to Equity Ratio',
+                'debtRatioLabel': 'Debt Ratio',
+                'interestCoverageRatioLabel': 'Interest Coverage Ratio',
+                'roceLabel': 'Return on Capital Employed (ROCE)',
+                'cccLabel': 'Cash Conversion Cycle (CCC)',
+                'operatingCashFlowRatioLabel': 'Operating Cash Flow Ratio',
+                'errorMessage': 'Please enter valid numbers in all required fields.',
+                'formErrorMessage': 'An error occurred. Please try again.'
+            }
+        };
+
+        function setLanguage(lang) {
+            document.documentElement.lang = lang;
+            document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+            document.querySelectorAll('[data-i18n-key]').forEach(element => {
+                const key = element.getAttribute('data-i18n-key');
+                if (translations[lang][key]) {
+                    if (element.tagName === 'INPUT' && element.hasAttribute('data-i18n-placeholder')) {
+                        element.setAttribute('placeholder', translations[lang][key]);
+                    } else {
+                        element.innerText = translations[lang][key];
+                    }
+                }
+            });
+        }
+        
+        // Default language on load
+        document.addEventListener('DOMContentLoaded', () => {
+            setLanguage('ar');
+        });
+
+        // Function to format the number with thousands separators
+        function formatNumber(input) {
+            let value = input.value.replace(/,/g, '');
+            if (value !== '') {
+                const number = parseFloat(value);
+                if (!isNaN(number)) {
+                    input.value = number.toLocaleString('en-US');
+                }
+            }
+        }
+
+        document.getElementById('calculateBtn').addEventListener('click', calculateRatios);
+
+        function calculateRatios() {
+            // Get all input values and remove commas before parsing
+            const sales = parseFloat(document.getElementById('sales').value.replace(/,/g, ''));
+            const cogs = parseFloat(document.getElementById('cogs').value.replace(/,/g, ''));
+            const netIncome = parseFloat(document.getElementById('netIncome').value.replace(/,/g, ''));
+            const operatingIncome = parseFloat(document.getElementById('operatingIncome').value.replace(/,/g, ''));
+            const interestExpense = parseFloat(document.getElementById('interestExpense').value.replace(/,/g, ''));
+            const depreciationAmortization = parseFloat(document.getElementById('depreciationAmortization').value.replace(/,/g, ''));
+            const cash = parseFloat(document.getElementById('cash').value.replace(/,/g, ''));
+            const currentAssets = parseFloat(document.getElementById('currentAssets').value.replace(/,/g, ''));
+            const averageReceivables = parseFloat(document.getElementById('averageReceivables').value.replace(/,/g, ''));
+            const inventory = parseFloat(document.getElementById('inventory').value.replace(/,/g, ''));
+            const averageInventory = parseFloat(document.getElementById('averageInventory').value.replace(/,/g, ''));
+            const currentLiabilities = parseFloat(document.getElementById('currentLiabilities').value.replace(/,/g, ''));
+            const averagePayables = parseFloat(document.getElementById('averagePayables').value.replace(/,/g, ''));
+            const totalAssets = parseFloat(document.getElementById('totalAssets').value.replace(/,/g, ''));
+            const totalLiabilities = parseFloat(document.getElementById('totalLiabilities').value.replace(/,/g, ''));
+            const totalEquity = parseFloat(document.getElementById('totalEquity').value.replace(/,/g, ''));
+            const cashFromOperations = parseFloat(document.getElementById('cashFromOperations').value.replace(/,/g, ''));
+
+            // Clear previous results
+            document.querySelectorAll('.ratio-value').forEach(el => el.innerText = '');
+
+            // Show results section
+            document.getElementById('results').classList.remove('hidden');
+
+            // --- Calculation Logic ---
+            // Liquidity Ratios
+            if (!isNaN(currentAssets) && !isNaN(currentLiabilities) && currentLiabilities !== 0) {
+                const currentRatio = currentAssets / currentLiabilities;
+                document.getElementById('currentRatio').innerText = currentRatio.toFixed(2);
+            }
+            if (!isNaN(currentAssets) && !isNaN(inventory) && !isNaN(currentLiabilities) && currentLiabilities !== 0) {
+                const quickRatio = (currentAssets - inventory) / currentLiabilities;
+                document.getElementById('quickRatio').innerText = quickRatio.toFixed(2);
+            }
+            if (!isNaN(cash) && !isNaN(currentLiabilities) && currentLiabilities !== 0) {
+                const cashRatio = cash / currentLiabilities;
+                document.getElementById('cashRatio').innerText = cashRatio.toFixed(2);
+            }
+
+            // Profitability Ratios
+            if (!isNaN(sales) && !isNaN(cogs) && sales !== 0) {
+                const grossProfitMargin = ((sales - cogs) / sales) * 100;
+                document.getElementById('grossProfitMargin').innerText = `${grossProfitMargin.toFixed(2)}%`;
+            }
+            if (!isNaN(netIncome) && !isNaN(sales) && sales !== 0) {
+                const netProfitMargin = (netIncome / sales) * 100;
+                document.getElementById('netProfitMargin').innerText = `${netProfitMargin.toFixed(2)}%`;
+            }
+            if (!isNaN(operatingIncome) && !isNaN(sales) && sales !== 0) {
+                const operatingProfitMargin = (operatingIncome / sales) * 100;
+                document.getElementById('operatingProfitMargin').innerText = `${operatingProfitMargin.toFixed(2)}%`;
+            }
+            if (!isNaN(netIncome) && !isNaN(totalAssets) && totalAssets !== 0) {
+                const roa = (netIncome / totalAssets) * 100;
+                document.getElementById('roa').innerText = `${roa.toFixed(2)}%`;
+            }
+            if (!isNaN(netIncome) && !isNaN(totalEquity) && totalEquity !== 0) {
+                const roe = (netIncome / totalEquity) * 100;
+                document.getElementById('roe').innerText = `${roe.toFixed(2)}%`;
+            }
+            if (!isNaN(operatingIncome) && !isNaN(depreciationAmortization) && !isNaN(sales) && sales !== 0) {
+                const ebitda = operatingIncome + depreciationAmortization;
+                const ebitdaMargin = (ebitda / sales) * 100;
+                document.getElementById('ebitdaMargin').innerText = `${ebitdaMargin.toFixed(2)}%`;
+            }
+
+            // Activity Ratios
+            if (!isNaN(cogs) && !isNaN(averageInventory) && averageInventory !== 0) {
+                const inventoryTurnover = cogs / averageInventory;
+                document.getElementById('inventoryTurnover').innerText = inventoryTurnover.toFixed(2);
+            }
+            if (!isNaN(sales) && !isNaN(totalAssets) && totalAssets !== 0) {
+                const totalAssetTurnover = sales / totalAssets;
+                document.getElementById('totalAssetTurnover').innerText = totalAssetTurnover.toFixed(2);
+            }
+            if (!isNaN(sales) && !isNaN(averageReceivables) && averageReceivables !== 0) {
+                const receivablesTurnover = sales / averageReceivables;
+                document.getElementById('receivablesTurnover').innerText = receivablesTurnover.toFixed(2);
+                if (receivablesTurnover !== 0) {
+                    const dso = 365 / receivablesTurnover;
+                    document.getElementById('dso').innerText = dso.toFixed(2);
+                }
+            }
+            if (!isNaN(cogs) && !isNaN(averagePayables) && averagePayables !== 0) {
+                const payablesTurnover = cogs / averagePayables;
+                document.getElementById('payablesTurnover').innerText = payablesTurnover.toFixed(2);
+            }
+
+            // Leverage & Efficiency Ratios
+            if (!isNaN(totalLiabilities) && !isNaN(totalEquity) && totalEquity !== 0) {
+                const debtToEquityRatio = totalLiabilities / totalEquity;
+                document.getElementById('debtToEquityRatio').innerText = debtToEquityRatio.toFixed(2);
+            }
+            if (!isNaN(totalLiabilities) && !isNaN(totalAssets) && totalAssets !== 0) {
+                const debtRatio = totalLiabilities / totalAssets;
+                document.getElementById('debtRatio').innerText = debtRatio.toFixed(2);
+            }
+            if (!isNaN(operatingIncome) && !isNaN(interestExpense) && interestExpense !== 0) {
+                const interestCoverageRatio = operatingIncome / interestExpense;
+                document.getElementById('interestCoverageRatio').innerText = interestCoverageRatio.toFixed(2);
+            }
+            if (!isNaN(operatingIncome) && !isNaN(totalAssets) && !isNaN(currentLiabilities) && (totalAssets - currentLiabilities) !== 0) {
+                const roce = operatingIncome / (totalAssets - currentLiabilities);
+                document.getElementById('roce').innerText = roce.toFixed(2);
+            }
+            if (!isNaN(document.getElementById('dso').innerText) && !isNaN(document.getElementById('inventoryTurnover').innerText) && !isNaN(document.getElementById('payablesTurnover').innerText)) {
+                const dso = parseFloat(document.getElementById('dso').innerText);
+                const dio = 365 / parseFloat(document.getElementById('inventoryTurnover').innerText);
+                const dpo = 365 / parseFloat(document.getElementById('payablesTurnover').innerText);
+                const ccc = dso + dio - dpo;
+                document.getElementById('ccc').innerText = ccc.toFixed(2);
+            }
+            if (!isNaN(cashFromOperations) && !isNaN(currentLiabilities) && currentLiabilities !== 0) {
+                const operatingCashFlowRatio = cashFromOperations / currentLiabilities;
+                document.getElementById('operatingCashFlowRatio').innerText = operatingCashFlowRatio.toFixed(2);
+            }
+        }
+    </script>
+</body>
+</html>
