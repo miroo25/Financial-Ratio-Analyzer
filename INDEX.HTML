@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n-key="appTitle">محلل النسب المالية - أداة متقدمة للتحليل المالي</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Language Switcher -->
+    <div class="language-switcher">
+        <button onclick="setLanguage('ar')" class="lang-btn">العربية</button>
+        <button onclick="setLanguage('en')" class="lang-btn">English</button>
+    </div>
+
+    <div class="container-wrapper">
+        <header class="text-center">
+            <div class="logo">
+                <div class="logo-icon">
+                    <div class="logo-bars">
+                        <div class="bar bar-1"></div>
+                        <div class="bar bar-2"></div>
+                        <div class="bar bar-3"></div>
+                    </div>
+                </div>
+            </div>
+            <h1 class="main-title" data-i18n-key="mainTitle">محلل النسب المالية</h1>
+            <p class="main-description" data-i18n-key="mainDescription">أداة متقدمة لاستخراج النسب المالية من بيانات قوائمك المالية</p>
+        </header>
+
+        <!-- File Upload Section -->
+        <section class="upload-section">
+            <div class="upload-card">
+                <h2 data-i18n-key="uploadTitle">رفع ملف البيانات المالية</h2>
+                <p class="upload-description" data-i18n-key="uploadDescription">
+                    يمكنك رفع ملف CSV أو Excel يحتوي على بياناتك المالية وسيتم تعبئة الحقول تلقائياً
+                </p>
+                
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📊</div>
+                    <p class="upload-text" data-i18n-key="uploadText">اسحب وأفلت ملف البيانات هنا أو انقر للاختيار</p>
+                    <p class="file-formats" data-i18n-key="fileFormats">CSV, Excel</p>
+                    <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" class="file-input">
+                </div>
+                
+                <div class="upload-actions">
+                    <button id="processFileBtn" class="button secondary" disabled data-i18n-key="processFileBtn">
+                        معالجة الملف
+                    </button>
+                    <a href="template.csv" download="financial_data_template.csv" class="button outline" data-i18n-key="downloadTemplate">
+                        📥 تحميل النموذج
+                    </a>
+                </div>
+                
+                <div class="file-info hidden" id="fileInfo">
+                    <p data-i18n-key="fileLoaded">تم تحميل الملف بنجاح!</p>
+                    <span id="fileName"></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Input Sections -->
+        <main class="input-sections">
+            <!-- قائمة الدخل -->
+            <section class="input-card">
+                <h2 data-i18n-key="incomeStatementTitle">قائمة الدخل</h2>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="sales" data-i18n-key="salesLabel">المبيعات</label>
+                        <input type="text" id="sales" oninput="formatNumber(this)" data-i18n-placeholder="salesPlaceholder" placeholder="أدخل المبيعات" tabindex="1">
+                    </div>
+                    <div class="input-group">
+                        <label for="cogs" data-i18n-key="cogsLabel">تكلفة البضاعة المباعة</label>
+                        <input type="text" id="cogs" oninput="formatNumber(this)" data-i18n-placeholder="cogsPlaceholder" placeholder="أدخل تكلفة البضاعة المباعة" tabindex="2">
+                    </div>
+                    <div class="input-group">
+                        <label for="netIncome" data-i18n-key="netIncomeLabel">صافي الدخل</label>
+                        <input type="text" id="netIncome" oninput="formatNumber(this)" data-i18n-placeholder="netIncomePlaceholder" placeholder="أدخل صافي الدخل" tabindex="3">
+                    </div>
+                    <div class="input-group">
+                        <label for="operatingIncome" data-i18n-key="operatingIncomeLabel">الربح التشغيلي (EBIT)</label>
+                        <input type="text" id="operatingIncome" oninput="formatNumber(this)" data-i18n-placeholder="operatingIncomePlaceholder" placeholder="أدخل الربح التشغيلي" tabindex="4">
+                    </div>
+                    <div class="input-group">
+                        <label for="interestExpense" data-i18n-key="interestExpenseLabel">مصروف الفائدة</label>
+                        <input type="text" id="interestExpense" oninput="formatNumber(this)" data-i18n-placeholder="interestExpensePlaceholder" placeholder="أدخل مصروف الفائدة" tabindex="5">
+                    </div>
+                    <div class="input-group">
+                        <label for="depreciationAmortization" data-i18n-key="depreciationAmortizationLabel">الاهلاك والإطفاء</label>
+                        <input type="text" id="depreciationAmortization" oninput="formatNumber(this)" data-i18n-placeholder="depreciationAmortizationPlaceholder" placeholder="أدخل الاهلاك والإطفاء" tabindex="6">
+                    </div>
+                </div>
+            </section>
+
+            <!-- قائمة المركز المالي -->
+            <section class="input-card">
+                <h2 data-i18n-key="balanceSheetTitle">قائمة المركز المالي</h2>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="cash" data-i18n-key="cashLabel">النقدية</label>
+                        <input type="text" id="cash" oninput="formatNumber(this)" data-i18n-placeholder="cashPlaceholder" placeholder="أدخل النقدية" tabindex="7">
+                    </div>
+                    <div class="input-group">
+                        <label for="currentAssets" data-i18n-key="currentAssetsLabel">الأصول المتداولة</label>
+                        <input type="text" id="currentAssets" oninput="formatNumber(this)" data-i18n-placeholder="currentAssetsPlaceholder" placeholder="أدخل الأصول المتداولة" tabindex="8">
+                    </div>
+                    <div class="input-group">
+                        <label for="averageReceivables" data-i18n-key="averageReceivablesLabel">متوسط الذمم المدينة</label>
+                        <input type="text" id="averageReceivables" oninput="formatNumber(this)" data-i18n-placeholder="averageReceivablesPlaceholder" placeholder="أدخل متوسط الذمم المدينة" tabindex="9">
+                    </div>
+                    <div class="input-group">
+                        <label for="inventory" data-i18n-key="inventoryLabel">المخزون</label>
+                        <input type="text" id="inventory" oninput="formatNumber(this)" data-i18n-placeholder="inventoryPlaceholder" placeholder="أدخل المخزون" tabindex="10">
+                    </div>
+                    <div class="input-group">
+                        <label for="averageInventory" data-i18n-key="averageInventoryLabel">متوسط المخزون</label>
+                        <input type="text" id="averageInventory" oninput="formatNumber(this)" data-i18n-placeholder="averageInventoryPlaceholder" placeholder="أدخل متوسط المخزون" tabindex="11">
+                    </div>
+                    <div class="input-group">
+                        <label for="currentLiabilities" data-i18n-key="currentLiabilitiesLabel">الالتزامات المتداولة</label>
+                        <input type="text" id="currentLiabilities" oninput="formatNumber(this)" data-i18n-placeholder="currentLiabilitiesPlaceholder" placeholder="أدخل الالتزامات المتداولة" tabindex="12">
+                    </div>
+                    <div class="input-group">
+                        <label for="averagePayables" data-i18n-key="averagePayablesLabel">متوسط الذمم الدائنة</label>
+                        <input type="text" id="averagePayables" oninput="formatNumber(this)" data-i18n-placeholder="averagePayablesPlaceholder" placeholder="أدخل متوسط الذمم الدائنة" tabindex="13">
+                    </div>
+                    <div class="input-group">
+                        <label for="totalAssets" data-i18n-key="totalAssetsLabel">إجمالي الأصول</label>
+                        <input type="text" id="totalAssets" oninput="formatNumber(this)" data-i18n-placeholder="totalAssetsPlaceholder" placeholder="أدخل إجمالي الأصول" tabindex="14">
+                    </div>
+                    <div class="input-group">
+                        <label for="totalLiabilities" data-i18n-key="totalLiabilitiesLabel">إجمالي الالتزامات</label>
+                        <input type="text" id="totalLiabilities" oninput="formatNumber(this)" data-i18n-placeholder="totalLiabilitiesPlaceholder" placeholder="أدخل إجمالي الالتزامات" tabindex="15">
+                    </div>
+                    <div class="input-group">
+                        <label for="totalEquity" data-i18n-key="totalEquityLabel">إجمالي حقوق الملكية</label>
+                        <input type="text" id="totalEquity" oninput="formatNumber(this)" data-i18n-placeholder="totalEquityPlaceholder" placeholder="أدخل إجمالي حقوق الملكية" tabindex="16">
+                    </div>
+                </div>
+            </section>
+
+            <!-- قائمة التدفقات النقدية -->
+            <section class="input-card">
+                <h2 data-i18n-key="cashFlowTitle">قائمة التدفقات النقدية</h2>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="cashFromOperations" data-i18n-key="cashFromOperationsLabel">النقدية من الأنشطة التشغيلية</label>
+                        <input type="text" id="cashFromOperations" oninput="formatNumber(this)" data-i18n-placeholder="cashFromOperationsPlaceholder" placeholder="أدخل النقدية من الأنشطة التشغيلية" tabindex="17">
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Calculate Button -->
+        <div class="calculate-section">
+            <button id="calculateBtn" class="calculate-btn" data-i18n-key="calculateBtn">
+                🧮 حساب النسب المالية
+            </button>
+        </div>
+
+        <!-- Results Section -->
+        <section id="results" class="results-section hidden">
+            <h2 data-i18n-key="resultsTitle">النسب المالية المستخرجة</h2>
+            
+            <div class="results-grid">
+                <!-- Liquidity Ratios -->
+                <div class="ratio-card">
+                    <h3 data-i18n-key="liquidityRatiosTitle">نسب السيولة</h3>
+                    <div class="ratio-item">
+                        <p data-i18n-key="currentRatioLabel">النسبة المتداولة</p>
+                        <p id="currentRatio" class="ratio-value"></p>
+                    </div>
+                    <div class="ratio-item">
+                        <p data-i18n-key="quickRatioLabel">النسبة السريعة</p>
+                        <p id="quickRatio" class="ratio-value"></p>
+                    </div>
+                    <div class="ratio-item">
+                        <p data-i18n-key="cashRatioLabel">نسبة النقدية</p>
+                        <p id="cashRatio" class="ratio-value"></p>
+                    </div>
+                </div>
+
+                <!-- Profitability Ratios -->
+                <div class="ratio-card">
+                    <h3 data-i18n-key="profitabilityRatiosTitle">نسب الربحية</h3>
+                    <div class="ratio-item">
+                        <p data-i18n-key="grossProfitMarginLabel">هامش الربح الإجمالي</p>
+                        <p id="grossProfitMargin" class="ratio-value"></p>
+                    </div>
+                    <div class="ratio-item">
+                        <p data-i18n-key="netProfitMarginLabel">هامش صافي الربح</p>
+                        <p id="netProfitMargin" class="ratio-value"></p>
+                    </div>
+                    <div class="ratio-item">
+                        <p data-i18n-key="operatingProfitMarginLabel">هامش الربح التشغيلي</p>
+                        <p id="operatingProfitMargin" class="ratio-value"></p>
+                    </div>
+                    <div class="ratio-item">
+                        <p data-i18n-key="ebitdaMarginLabel">هامش الأرباح قبل الفوائد والضرائب والإهلاك</p>
+                        <p id="ebitdaMargin" class="ratio-value"></p>
+                    </div>
+                    <div class="ratio-item">
+                        <p data-i18n-key="roaLabel">العائد على الأصول (ROA)</p>
+                        <p id="roa" class="ratio-value"></p>
+                    </div>
+                    <div class="ratio-item">
+                        <p data-i18n-key="roeLabel">العائد على حقوق الملكية (ROE)</p>
+                        <p id="roe" class="ratio-value"></p>
+                    </div>
+                </div>
+
+                <!-- Activity Ratios -->
+                <div class="ratio-card">
+                    <h3 data-i18n-key="activityRatiosTitle">نسب النشاط</h3>
+                    <div class="ratio-item">
+                        <p data-i18n-key="inventoryTurnoverLabel">معدل دوران المخزون</p>
+                        <p id="inventoryTurnover" class="ratio-value"></p>
+                    </div>
+                    <div class="ratio-item">
+                        <p data-i18n-key="totalAssetTurnoverLabel">معدل دوران إجمالي الأصول</p>
+                        <p id="totalAssetTurnover" class="ratio-value"></p>
+                    </div>
+                    <div class="ratio-item">
+                        <p data-i18n-key="receivablesTurnoverLabel">معدل دوران الذمم المدينة</p>
+                        <p id="receivablesTurnover" class="ratio-value"></p>
+                    </div>
+                    <div class="ratio-item">
+                        <p data-i18n-key="dsoLabel">متوسط فترة التحصيل (DSO)</p>
+                        <p id="dso" class="ratio-value"></p>
+                    </div>
+                    <div class="ratio-item">
+                        <p data-i18n-key="payablesTurnoverLabel">معدل دوران الدائنين</p>
+                        <p id="payablesTurnover" class="ratio-value"></p>
+                    </div>
+                </div>
+
+                <!-- Leverage & Efficiency Ratios -->
+                <div class="ratio-card">
+                    <h3 data-i18n-key="leverageRatiosTitle">نسب الرفع والكفاءة</h3>
+                    <div class="ratio-item">
+                        <p data-i18n-key="debtToEquityRatioLabel">نسبة الدين إلى حقوق الملكية</p>
+                        <p id="debtToEquityRatio" class="ratio-value"></p>
+                    </div>
+                    <div class="ratio-item">
+                        <p data-i18n-key="debtRatioLabel">نسبة الدين</p>
+                        <p id="debtRatio" class="ratio-value"></p>
+                    </div>
+                    <div class="ratio-item">
+                        <p data-i18n-key="interestCoverageRatioLabel">تغطية الفوائد</p>
+                        <p id="interestCoverageRatio" class="ratio-value"></p>
+                    </div>
+                    <div class="ratio-item">
+                        <p data-i18n-key="roceLabel">العائد على رأس المال العامل (ROCE)</p>
+                        <p id="roce" class="ratio-value"></p>
+                    </div>
+                    <div class="ratio-item">
+                        <p data-i18n-key="cccLabel">دورة التحويل النقدي (CCC)</p>
+                        <p id="ccc" class="ratio-value"></p>
+                    </div>
+                    <div class="ratio-item">
+                        <p data-i18n-key="operatingCashFlowRatioLabel">نسبة التدفق النقدي التشغيلي</p>
+                        <p id="operatingCashFlowRatio" class="ratio-value"></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Error Message -->
+        <div id="errorMessage" class="error-message hidden">
+            <p data-i18n-key="errorMessage">الرجاء إدخال أرقام صحيحة في جميع الحقول المطلوبة.</p>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p data-i18n-key="footerText">
+                محلل النسب المالية <span class="highlight">©2025</span> | تم تطويره بواسطة <span class="author">أ. عمار حسن</span>
+            </p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
