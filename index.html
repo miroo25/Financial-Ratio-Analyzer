@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>محلل النسب المالية | Financial Ratio Analyzer</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg: #0d0f14;
+  --surface: #13161e;
+  --surface2: #1a1e2a;
+  --surface3: #222736;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.12);
+  --text: #e8eaf2;
+  --text2: #8b90a8;
+  --text3: #555b73;
+  --accent: #4f8ef7;
+  --accent2: #7b5cfa;
+  --green: #34d399;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --teal: #22d3ee;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --transition: 0.2s cubic-bezier(.4,0,.2,1);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Cairo','IBM Plex Sans Arabic',sans-serif;
+  min-height:100vh;
+  line-height:1.6;
+}
+
+/* ─── Layout ─── */
+.shell{max-width:1100px;margin:0 auto;padding:32px 20px;}
+
+/* ─── Header ─── */
+.header{text-align:center;padding:60px 0 48px;position:relative;}
+.header::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:600px;height:300px;
+  background:radial-gradient(ellipse at center,rgba(79,142,247,0.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.logo-ring{
+  width:72px;height:72px;border-radius:50%;
+  border:1.5px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 24px;
+  background:linear-gradient(135deg,var(--surface2),var(--surface3));
+  position:relative;
+}
+.logo-ring::before{
+  content:'';position:absolute;inset:-1px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  z-index:-1;opacity:0.4;
+}
+.logo-ring svg{width:32px;height:32px;stroke:var(--accent);fill:none;stroke-width:1.5;}
+h1{font-size:2.2rem;font-weight:700;letter-spacing:-0.03em;margin-bottom:8px;}
+h1 span{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.subtitle{color:var(--text2);font-size:1rem;max-width:500px;margin:0 auto 24px;}
+.lang-toggle{
+  display:inline-flex;gap:4px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:30px;padding:4px;
+}
+.lang-btn{
+  padding:6px 18px;border:none;border-radius:26px;cursor:pointer;
+  font-family:inherit;font-size:0.85rem;font-weight:600;
+  color:var(--text2);background:transparent;transition:var(--transition);
+}
+.lang-btn.active{background:var(--accent);color:#fff;}
+
+/* ─── Cards ─── */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:28px;margin-bottom:20px;
+}
+.card-title{
+  font-size:1rem;font-weight:600;color:var(--text);
+  margin-bottom:20px;padding-bottom:14px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+}
+.card-title .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+
+/* ─── Upload ─── */
+.drop-zone{
+  border:1.5px dashed var(--border2);border-radius:var(--radius);
+  padding:40px 20px;text-align:center;cursor:pointer;
+  transition:var(--transition);background:var(--surface2);
+  position:relative;overflow:hidden;
+}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--accent);background:rgba(79,142,247,0.04);}
+.drop-icon{font-size:2.2rem;margin-bottom:12px;display:block;}
+.drop-text{color:var(--text2);font-size:0.95rem;}
+.drop-text strong{color:var(--accent);}
+#fileInput{display:none;}
+.progress-wrap{margin-top:16px;display:none;}
+.progress-track{height:3px;background:var(--surface3);border-radius:3px;overflow:hidden;}
+.progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 0.4s;}
+.progress-label{font-size:0.8rem;color:var(--text2);margin-top:6px;}
+
+/* ─── Btn row ─── */
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
+.btn{
+  padding:10px 22px;border-radius:var(--radius-sm);border:none;cursor:pointer;
+  font-family:inherit;font-size:0.9rem;font-weight:600;transition:var(--transition);
+  display:inline-flex;align-items:center;gap:6px;
+}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{opacity:0.88;transform:translateY(-1px);}
+.btn-primary:disabled{background:var(--surface3);color:var(--text3);cursor:not-allowed;transform:none;}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text2);}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+.btn-green{background:var(--green);color:#0d1a12;}
+.btn-green:hover{opacity:0.88;transform:translateY(-1px);}
+
+/* ─── Input grid ─── */
+.section-label{
+  font-size:0.8rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:16px;
+}
+.input-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:0.85rem;color:var(--text2);}
+.field input{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:10px 14px;
+  color:var(--text);font-family:inherit;font-size:0.95rem;
+  transition:var(--transition);outline:none;
+}
+.field input:focus{border-color:var(--accent);background:rgba(79,142,247,0.04);}
+.field input::placeholder{color:var(--text3);}
+
+/* ─── Calculate ─── */
+.calc-wrap{text-align:center;padding:24px 0;}
+.calc-btn{
+  padding:14px 44px;font-size:1.05rem;font-family:inherit;font-weight:700;
+  border:none;cursor:pointer;border-radius:var(--radius);
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;transition:var(--transition);
+  box-shadow:0 4px 24px rgba(79,142,247,0.25);
+}
+.calc-btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(79,142,247,0.35);}
+
+/* ─── Results ─── */
+.results-hidden{display:none;}
+.ratio-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-bottom:28px;}
+.ratio-group{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+.ratio-group-title{
+  font-size:0.78rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:14px;
+}
+.ratio-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);}
+.ratio-row:last-child{border-bottom:none;}
+.ratio-name{font-size:0.85rem;color:var(--text2);flex:1;}
+.ratio-val{font-size:0.95rem;font-weight:600;color:var(--accent);white-space:nowrap;margin-right:8px;}
+.ratio-explain-btn{
+  background:transparent;border:1px solid var(--border);
+  border-radius:4px;padding:2px 7px;font-size:0.72rem;
+  color:var(--text3);cursor:pointer;font-family:inherit;
+  transition:var(--transition);white-space:nowrap;
+}
+.ratio-explain-btn:hover{border-color:var(--accent2);color:var(--accent2);}
+
+/* ─── Charts ─── */
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:20px;margin-bottom:28px;}
+.chart-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+.chart-title{font-size:0.82rem;font-weight:600;color:var(--text2);margin-bottom:16px;letter-spacing:0.03em;}
+.chart-wrap{position:relative;height:220px;}
+
+/* ─── AI Panel ─── */
+.ai-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;margin-bottom:20px;}
+.ai-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.ai-title{display:flex;align-items:center;gap:10px;font-size:1rem;font-weight:600;}
+.ai-badge{
+  font-size:0.7rem;padding:3px 9px;border-radius:20px;
+  background:rgba(79,142,247,0.15);border:1px solid rgba(79,142,247,0.3);
+  color:var(--accent);font-weight:600;letter-spacing:0.04em;
+}
+.ai-output{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:20px;
+  font-size:0.9rem;line-height:1.8;color:var(--text);
+  min-height:100px;white-space:pre-wrap;
+}
+.ai-loading{display:flex;align-items:center;gap:10px;color:var(--text2);font-size:0.9rem;}
+.dot-pulse{display:flex;gap:4px;}
+.dot-pulse span{
+  width:6px;height:6px;border-radius:50%;background:var(--accent);
+  animation:pulse 1.2s ease-in-out infinite;
+}
+.dot-pulse span:nth-child(2){animation-delay:0.2s;}
+.dot-pulse span:nth-child(3){animation-delay:0.4s;}
+@keyframes pulse{0%,80%,100%{opacity:0.3;transform:scale(0.8);}40%{opacity:1;transform:scale(1);}}
+
+/* ─── Explain modal ─── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);
+  z-index:1000;align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--radius);padding:28px;max-width:560px;width:100%;
+  position:relative;max-height:80vh;overflow-y:auto;
+}
+.modal-close{
+  position:absolute;top:16px;left:16px;background:var(--surface2);
+  border:1px solid var(--border);border-radius:6px;
+  color:var(--text2);cursor:pointer;padding:4px 10px;font-size:0.85rem;
+  font-family:inherit;
+}
+.modal-title{font-size:1.1rem;font-weight:700;margin-bottom:4px;}
+.modal-subtitle{font-size:0.8rem;color:var(--text3);margin-bottom:16px;}
+.modal-body{font-size:0.9rem;line-height:1.8;color:var(--text2);white-space:pre-wrap;}
+
+/* ─── Error ─── */
+.error-msg{
+  background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);
+  border-radius:var(--radius-sm);padding:12px 16px;color:var(--red);
+  font-size:0.9rem;margin-top:12px;display:none;
+}
+
+/* ─── File badge ─── */
+.file-badge{
+  display:none;align-items:center;gap:8px;margin-top:12px;
+  background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.2);
+  border-radius:var(--radius-sm);padding:10px 14px;font-size:0.85rem;
+}
+.file-badge .fname{color:var(--accent);font-weight:600;}
+
+/* ─── Responsive ─── */
+@media(max-width:680px){
+  .charts-grid{grid-template-columns:1fr;}
+  h1{font-size:1.7rem;}
+  .btn-row{flex-direction:column;}
+  .btn{width:100%;justify-content:center;}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="logo-ring">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    </div>
+    <h1><span class="t-ar">محلل النسب المالية</span><span class="t-en" style="display:none">Financial Ratio Analyzer</span></h1>
+    <p class="subtitle t-ar">أداة متقدمة تستخرج النسب المالية من قوائمك المالية وتحللها بالذكاء الاصطناعي</p>
+    <p class="subtitle t-en" style="display:none">Advanced tool that extracts financial ratios from your statements and analyzes them with AI</p>
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('ar')">العربية</button>
+      <button class="lang-btn" onclick="setLang('en')">English</button>
+    </div>
+  </header>
+
+  <!-- Upload -->
+  <div class="card">
+    <div class="card-title"><div class="dot"></div><span class="t-ar">رفع الملف المالي</span><span class="t-en" style="display:none">Upload Financial File</span></div>
+    <div class="drop-zone" id="dropZone">
+      <span class="drop-icon">📊</span>
+      <p class="drop-text t-ar">اسحب ملفك هنا أو <strong>انقر للاختيار</strong></p>
+      <p class="drop-text t-en" style="display:none">Drag file here or <strong>click to select</strong></p>
+      <p style="font-size:0.78rem;color:var(--text3);margin-top:6px;">CSV · Excel · PDF</p>
+      <input type="file" id="fileInput" accept=".csv,.xlsx,.xls,.pdf">
+    </div>
+    <div class="file-badge" id="fileBadge">
+      <span>📎</span><span class="fname" id="fileName"></span>
+    </div>
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+      <p class="progress-label" id="progressLabel"></p>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="processPDFBtn" disabled onclick="processPDF()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span class="t-ar">معالجة PDF</span><span class="t-en" style="display:none">Process PDF</span>
+      </button>
+      <button class="btn btn-outline" onclick="downloadTemplate()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span class="t-ar">تحميل النموذج</span><span class="t-en" style="display:none">Download Template</span>
+      </button>
+    </div>
+    <div class="error-msg" id="uploadError"></div>
+  </div>
+
+  <!-- Income Statement -->
+  <div class="card">
+    <div class="card-title"><div class="dot"></div><span class="t-ar">قائمة الدخل</span><span class="t-en" style="display:none">Income Statement</span></div>
+    <div class="input-grid">
+      <div class="field"><label class="t-ar">المبيعات / الإيرادات</label><label class="t-en" style="display:none">Revenue / Sales</label><input type="text" id="sales" oninput="fmt(this)" tabindex="1" placeholder="0"></div>
+      <div class="field"><label class="t-ar">تكلفة البضاعة المباعة</label><label class="t-en" style="display:none">Cost of Goods Sold</label><input type="text" id="cogs" oninput="fmt(this)" tabindex="2" placeholder="0"></div>
+      <div class="field"><label class="t-ar">صافي الدخل</label><label class="t-en" style="display:none">Net Income</label><input type="text" id="netIncome" oninput="fmt(this)" tabindex="3" placeholder="0"></div>
+      <div class="field"><label class="t-ar">الربح التشغيلي (EBIT)</label><label class="t-en" style="display:none">Operating Income (EBIT)</label><input type="text" id="operatingIncome" oninput="fmt(this)" tabindex="4" placeholder="0"></div>
+      <div class="field"><label class="t-ar">مصروف الفائدة</label><label class="t-en" style="display:none">Interest Expense</label><input type="text" id="interestExpense" oninput="fmt(this)" tabindex="5" placeholder="0"></div>
+      <div class="field"><label class="t-ar">الإهلاك والإطفاء</label><label class="t-en" style="display:none">Depreciation & Amortization</label><input type="text" id="depreciationAmortization" oninput="fmt(this)" tabindex="6" placeholder="0"></div>
+    </div>
+  </div>
+
+  <!-- Balance Sheet -->
+  <div class="card">
+    <div class="card-title"><div class="dot"></div><span class="t-ar">قائمة المركز المالي</span><span class="t-en" style="display:none">Balance Sheet</span></div>
+    <div class="input-grid">
+      <div class="field"><label class="t-ar">النقدية وما يعادلها</label><label class="t-en" style="display:none">Cash & Equivalents</label><input type="text" id="cash" oninput="fmt(this)" tabindex="7" placeholder="0"></div>
+      <div class="field"><label class="t-ar">الأصول المتداولة</label><label class="t-en" style="display:none">Current Assets</label><input type="text" id="currentAssets" oninput="fmt(this)" tabindex="8" placeholder="0"></div>
+      <div class="field"><label class="t-ar">متوسط الذمم المدينة</label><label class="t-en" style="display:none">Average Receivables</label><input type="text" id="averageReceivables" oninput="fmt(this)" tabindex="9" placeholder="0"></div>
+      <div class="field"><label class="t-ar">المخزون</label><label class="t-en" style="display:none">Inventory</label><input type="text" id="inventory" oninput="fmt(this)" tabindex="10" placeholder="0"></div>
+      <div class="field"><label class="t-ar">متوسط المخزون</label><label class="t-en" style="display:none">Average Inventory</label><input type="text" id="averageInventory" oninput="fmt(this)" tabindex="11" placeholder="0"></div>
+      <div class="field"><label class="t-ar">الالتزامات المتداولة</label><label class="t-en" style="display:none">Current Liabilities</label><input type="text" id="currentLiabilities" oninput="fmt(this)" tabindex="12" placeholder="0"></div>
+      <div class="field"><label class="t-ar">متوسط الذمم الدائنة</label><label class="t-en" style="display:none">Average Payables</label><input type="text" id="averagePayables" oninput="fmt(this)" tabindex="13" placeholder="0"></div>
+      <div class="field"><label class="t-ar">إجمالي الأصول</label><label class="t-en" style="display:none">Total Assets</label><input type="text" id="totalAssets" oninput="fmt(this)" tabindex="14" placeholder="0"></div>
+      <div class="field"><label class="t-ar">إجمالي الالتزامات</label><label class="t-en" style="display:none">Total Liabilities</label><input type="text" id="totalLiabilities" oninput="fmt(this)" tabindex="15" placeholder="0"></div>
+      <div class="field"><label class="t-ar">إجمالي حقوق الملكية</label><label class="t-en" style="display:none">Total Equity</label><input type="text" id="totalEquity" oninput="fmt(this)" tabindex="16" placeholder="0"></div>
+    </div>
+  </div>
+
+  <!-- Cash Flow -->
+  <div class="card">
+    <div class="card-title"><div class="dot"></div><span class="t-ar">قائمة التدفقات النقدية</span><span class="t-en" style="display:none">Cash Flow Statement</span></div>
+    <div class="input-grid">
+      <div class="field"><label class="t-ar">التدفق النقدي من الأنشطة التشغيلية</label><label class="t-en" style="display:none">Cash from Operations</label><input type="text" id="cashFromOperations" oninput="fmt(this)" tabindex="17" placeholder="0"></div>
+    </div>
+  </div>
+
+  <!-- Calculate -->
+  <div class="calc-wrap">
+    <button class="calc-btn" onclick="calculateRatios()">
+      <span class="t-ar">🧮 حساب وتحليل النسب المالية</span>
+      <span class="t-en" style="display:none">🧮 Calculate & Analyze Ratios</span>
+    </button>
+    <div class="error-msg" id="calcError" style="margin-top:12px;display:none;"></div>
+  </div>
+
+  <!-- Results -->
+  <div id="resultsSection" class="results-hidden">
+
+    <!-- Ratio Cards -->
+    <div class="card">
+      <div class="card-title"><div class="dot"></div><span class="t-ar">النسب المالية المحسوبة</span><span class="t-en" style="display:none">Calculated Financial Ratios</span></div>
+      <div class="ratio-grid" id="ratioGrid"></div>
+    </div>
+
+    <!-- Charts -->
+    <div class="card">
+      <div class="card-title"><div class="dot"></div><span class="t-ar">التمثيل البياني</span><span class="t-en" style="display:none">Visual Charts</span></div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title t-ar">نسب السيولة</div><div class="chart-title t-en" style="display:none">Liquidity Ratios</div>
+          <div class="chart-wrap"><canvas id="liquidityChart" role="img" aria-label="Liquidity ratios bar chart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title t-ar">هوامش الربحية (%)</div><div class="chart-title t-en" style="display:none">Profitability Margins (%)</div>
+          <div class="chart-wrap"><canvas id="profitChart" role="img" aria-label="Profitability margins bar chart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title t-ar">نسب النشاط</div><div class="chart-title t-en" style="display:none">Activity Ratios</div>
+          <div class="chart-wrap"><canvas id="activityChart" role="img" aria-label="Activity ratios bar chart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title t-ar">نسب الرفع المالي</div><div class="chart-title t-en" style="display:none">Leverage Ratios</div>
+          <div class="chart-wrap"><canvas id="leverageChart" role="img" aria-label="Leverage ratios bar chart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Analysis -->
+    <div class="ai-panel">
+      <div class="ai-header">
+        <div class="ai-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <span class="t-ar">التحليل بالذكاء الاصطناعي</span><span class="t-en" style="display:none">AI-Powered Analysis</span>
+          <span class="ai-badge">Claude AI</span>
+        </div>
+        <button class="btn btn-outline" onclick="runAIAnalysis()" id="analyzeBtn">
+          <span class="t-ar">تشغيل التحليل</span><span class="t-en" style="display:none">Run Analysis</span>
+        </button>
+      </div>
+      <div class="ai-output" id="aiOutput">
+        <span style="color:var(--text3);" class="t-ar">اضغط على "تشغيل التحليل" للحصول على تحليل شامل من الذكاء الاصطناعي...</span>
+        <span style="color:var(--text3);" class="t-en" style="display:none">Click "Run Analysis" to get a comprehensive AI-powered interpretation...</span>
+      </div>
+    </div>
+
+  </div><!-- /resultsSection -->
+
+  <!-- Footer -->
+  <footer style="text-align:center;padding:32px 0 20px;margin-top:20px;border-top:1px solid var(--border);">
+    <p style="font-size:0.82rem;color:var(--text3);">
+      <span class="t-ar">أُعِدَّ بواسطة</span><span class="t-en" style="display:none">Prepared by</span>
+      <span style="color:var(--accent);font-weight:600;margin:0 6px;">Mr. Ammar Ali</span>
+      <span style="color:var(--text3);">© 2025</span>
+    </p>
+  </footer>
+
+</div><!-- /shell -->
+
+<!-- Explain Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕ <span class="t-ar">إغلاق</span><span class="t-en" style="display:none">Close</span></button>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-subtitle" id="modalVal"></div>
+    <div class="modal-body" id="modalBody">
+      <div class="ai-loading">
+        <div class="dot-pulse"><span></span><span></span><span></span></div>
+        <span class="t-ar">جاري الشرح...</span><span class="t-en" style="display:none">Explaining...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PDFJS = window['pdfjs-dist/build/pdf'];
+PDFJS.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+/* ─── Language ─── */
+let currentLang = 'ar';
+function setLang(lang) {
+  currentLang = lang;
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.querySelectorAll('.lang-btn').forEach((b,i)=> b.classList.toggle('active', (i===0&&lang==='ar')||(i===1&&lang==='en')));
+  document.querySelectorAll('.t-ar').forEach(el => el.style.display = lang==='ar'?'':'none');
+  document.querySelectorAll('.t-en').forEach(el => el.style.display = lang==='en'?'':'none');
+}
+
+/* ─── Number format ─── */
+function fmt(input) {
+  const raw = input.value.replace(/[^\d.]/g,'');
+  const parts = raw.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  input.value = parts.join('.');
+}
+function parseNum(id) {
+  const el = document.getElementById(id);
+  if (!el || !el.value) return 0;
+  return parseFloat(el.value.replace(/,/g,'')) || 0;
+}
+function fmtDisplay(n) {
+  return new Intl.NumberFormat(currentLang==='ar'?'ar-EG':'en-US').format(n);
+}
+
+/* ─── Upload ─── */
+let currentFile = null;
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+dropZone.addEventListener('click', ()=> fileInput.click());
+dropZone.addEventListener('dragover', e=>{e.preventDefault();dropZone.classList.add('drag');});
+dropZone.addEventListener('dragleave', ()=> dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop', e=>{e.preventDefault();dropZone.classList.remove('drag');if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);});
+fileInput.addEventListener('change', e=> { if(e.target.files[0]) handleFile(e.target.files[0]); });
+
+function handleFile(file) {
+  currentFile = file;
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileBadge').style.display = 'flex';
+  const isPDF = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+  document.getElementById('processPDFBtn').disabled = !isPDF;
+}
+
+async function processPDF() {
+  if (!currentFile) return;
+  const wrap = document.getElementById('progressWrap');
+  const bar = document.getElementById('progressBar');
+  const label = document.getElementById('progressLabel');
+  wrap.style.display = 'block';
+  try {
+    setProgress(bar, label, 0, currentLang==='ar'?'جاري تحميل الملف...':'Loading file...');
+    const buf = await currentFile.arrayBuffer();
+    setProgress(bar, label, 20, currentLang==='ar'?'جاري تحليل PDF...':'Parsing PDF...');
+    const pdf = await PDFJS.getDocument(buf).promise;
+    let fullText = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const tc = await page.getTextContent();
+      fullText += tc.items.map(it=>it.str).join(' ') + '\n';
+      setProgress(bar, label, 20 + (i/pdf.numPages)*60,
+        (currentLang==='ar'?'صفحة ':'Page ') + i + (currentLang==='ar'?' من ':' of ') + pdf.numPages);
+    }
+    setProgress(bar, label, 85, currentLang==='ar'?'استخراج البيانات المالية...':'Extracting financial data...');
+    fillFromText(fullText);
+    setProgress(bar, label, 100, currentLang==='ar'?'تم الاستخراج بنجاح ✓':'Extraction complete ✓');
+    setTimeout(()=> wrap.style.display='none', 2000);
+  } catch(err) {
+    label.textContent = (currentLang==='ar'?'خطأ: ':'Error: ') + err.message;
+  }
+}
+function setProgress(bar, label, pct, msg) {
+  bar.style.width = pct + '%';
+  label.textContent = msg;
+}
+
+/* ─── Enhanced PDF extraction ─── */
+function fillFromText(text) {
+  const clean = s => s.replace(/,/g,'').replace(/\s+/g,'');
+
+  // Pairs of [fieldId, regexes array]
+  const rules = [
+    ['sales',       [/(?:المبيعات|الإيرادات|إيرادات|revenue|sales|net\s*sales)\s*[:\-]?\s*([\d,\.]+)/gi]],
+    ['cogs',        [/(?:تكلفة البضاع|تكلفة المبيع|cost\s*of\s*(?:goods?\s*)?sold|cogs)\s*[:\-]?\s*([\d,\.]+)/gi]],
+    ['netIncome',   [/(?:صافي الدخل|صافي الربح|net\s*(?:income|profit|earnings))\s*[:\-]?\s*([\d,\.]+)/gi]],
+    ['operatingIncome',[/(?:الربح التشغيلي|الدخل التشغيلي|(?:ebit|operating\s*(?:income|profit)))\s*[:\-]?\s*([\d,\.]+)/gi]],
+    ['interestExpense',[/(?:مصروف الفائدة|فوائد|interest\s*(?:expense|cost))\s*[:\-]?\s*([\d,\.]+)/gi]],
+    ['depreciationAmortization',[/(?:الإهلاك|الاستهلاك|depreciation|amortization|d&a|da)\s*[:\-]?\s*([\d,\.]+)/gi]],
+    ['cash',        [/(?:النقدية|النقد|cash\s*(?:and\s*(?:cash\s*)?equivalents)?)\s*[:\-]?\s*([\d,\.]+)/gi]],
+    ['currentAssets',[/(?:الأصول المتداولة|الأصول الجارية|current\s*assets)\s*[:\-]?\s*([\d,\.]+)/gi]],
+    ['inventory',   [/(?:المخزون|بضاعة|inventory|inventories|stock)\s*[:\-]?\s*([\d,\.]+)/gi]],
+    ['currentLiabilities',[/(?:الالتزامات المتداولة|الخصوم المتداولة|current\s*liabilities)\s*[:\-]?\s*([\d,\.]+)/gi]],
+    ['totalAssets', [/(?:إجمالي الأصول|مجموع الأصول|total\s*assets)\s*[:\-]?\s*([\d,\.]+)/gi]],
+    ['totalLiabilities',[/(?:إجمالي الالتزامات|مجموع الخصوم|total\s*liabilities)\s*[:\-]?\s*([\d,\.]+)/gi]],
+    ['totalEquity', [/(?:حقوق الملكية|إجمالي حقوق|total\s*(?:equity|shareholders'?\s*equity))\s*[:\-]?\s*([\d,\.]+)/gi]],
+    ['cashFromOperations',[/(?:التدفق النقدي.*تشغيل|cash\s*(?:from|provided\s*by)\s*(?:operating|operations))\s*[:\-]?\s*([\d,\.]+)/gi]],
+  ];
+
+  rules.forEach(([id, patterns]) => {
+    for (const pattern of patterns) {
+      pattern.lastIndex = 0;
+      const m = pattern.exec(text);
+      if (m) {
+        const val = parseFloat(clean(m[1]));
+        if (val > 0) {
+          const el = document.getElementById(id);
+          if (el) { el.value = fmtDisplay(val); }
+          break;
+        }
+      }
+    }
+  });
+}
+
+/* ─── Template download ─── */
+function downloadTemplate() {
+  const rows = [
+    ['Field','Value'],
+    ['sales',''],['cogs',''],['netIncome',''],['operatingIncome',''],
+    ['interestExpense',''],['depreciationAmortization',''],['cash',''],
+    ['currentAssets',''],['averageReceivables',''],['inventory',''],
+    ['averageInventory',''],['currentLiabilities',''],['averagePayables',''],
+    ['totalAssets',''],['totalLiabilities',''],['totalEquity',''],
+    ['cashFromOperations','']
+  ];
+  const csv = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'financial_template.csv'; a.click();
+}
+
+/* ─── Calculate ─── */
+let lastRatios = {};
+let chartInstances = {};
+
+function calculateRatios() {
+  const d = {
+    sales: parseNum('sales'), cogs: parseNum('cogs'),
+    netIncome: parseNum('netIncome'), operatingIncome: parseNum('operatingIncome'),
+    interestExpense: parseNum('interestExpense'), depreciationAmortization: parseNum('depreciationAmortization'),
+    cash: parseNum('cash'), currentAssets: parseNum('currentAssets'),
+    averageReceivables: parseNum('averageReceivables'), inventory: parseNum('inventory'),
+    averageInventory: parseNum('averageInventory'), currentLiabilities: parseNum('currentLiabilities'),
+    averagePayables: parseNum('averagePayables'), totalAssets: parseNum('totalAssets'),
+    totalLiabilities: parseNum('totalLiabilities'), totalEquity: parseNum('totalEquity'),
+    cashFromOperations: parseNum('cashFromOperations')
+  };
+
+  const errEl = document.getElementById('calcError');
+  if (!d.sales || !d.currentAssets || !d.currentLiabilities || !d.totalAssets) {
+    errEl.style.display = 'block';
+    errEl.textContent = currentLang==='ar'
+      ? 'يرجى إدخال على الأقل: المبيعات، الأصول المتداولة، الالتزامات المتداولة، إجمالي الأصول'
+      : 'Please enter at least: Sales, Current Assets, Current Liabilities, Total Assets';
+    return;
+  }
+  errEl.style.display = 'none';
+
+  const safe = (n,d) => d && d!==0 ? n/d : null;
+
+  const r = {
+    // Liquidity
+    currentRatio:    safe(d.currentAssets, d.currentLiabilities),
+    quickRatio:      safe(d.currentAssets - d.inventory, d.currentLiabilities),
+    cashRatio:       safe(d.cash, d.currentLiabilities),
+    // Profitability
+    grossProfitMargin:    safe(d.sales - d.cogs, d.sales),
+    netProfitMargin:      safe(d.netIncome, d.sales),
+    operatingProfitMargin:safe(d.operatingIncome, d.sales),
+    ebitdaMargin:         safe(d.operatingIncome + d.depreciationAmortization, d.sales),
+    roa:                  safe(d.netIncome, d.totalAssets),
+    roe:                  safe(d.netIncome, d.totalEquity),
+    // Activity
+    inventoryTurnover:    safe(d.cogs, d.averageInventory || d.inventory),
+    totalAssetTurnover:   safe(d.sales, d.totalAssets),
+    receivablesTurnover:  safe(d.sales, d.averageReceivables),
+    payablesTurnover:     safe(d.cogs, d.averagePayables),
+    // Leverage
+    debtToEquityRatio:    safe(d.totalLiabilities, d.totalEquity),
+    debtRatio:            safe(d.totalLiabilities, d.totalAssets),
+    interestCoverageRatio:safe(d.operatingIncome, d.interestExpense),
+    roce:                 safe(d.operatingIncome, d.totalAssets - d.currentLiabilities),
+    operatingCashFlowRatio:safe(d.cashFromOperations, d.currentLiabilities),
+  };
+
+  // Derived (fixed DSO/DIO/DPO)
+  r.dso = r.receivablesTurnover ? 365 / r.receivablesTurnover : null;
+  r.dio = r.inventoryTurnover   ? 365 / r.inventoryTurnover   : null;
+  r.dpo = r.payablesTurnover    ? 365 / r.payablesTurnover    : null;
+  r.ccc = (r.dso!==null && r.dio!==null && r.dpo!==null) ? r.dso + r.dio - r.dpo : null;
+
+  lastRatios = r;
+  renderRatioGrid(r);
+  renderCharts(r);
+  document.getElementById('resultsSection').classList.remove('results-hidden');
+  document.getElementById('aiOutput').innerHTML =
+    `<span style="color:var(--text3);">${currentLang==='ar'?'اضغط على "تشغيل التحليل" للحصول على تحليل AI...':'Click "Run Analysis" for AI interpretation...'}</span>`;
+  document.getElementById('resultsSection').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ─── Ratio Definitions ─── */
+const RATIO_DEFS = {
+  currentRatio:    {ar:'النسبة المتداولة',       en:'Current Ratio',          pct:false},
+  quickRatio:      {ar:'النسبة السريعة',          en:'Quick Ratio',            pct:false},
+  cashRatio:       {ar:'نسبة النقدية',            en:'Cash Ratio',             pct:false},
+  grossProfitMargin:{ar:'هامش الربح الإجمالي',   en:'Gross Profit Margin',    pct:true},
+  netProfitMargin: {ar:'هامش صافي الربح',        en:'Net Profit Margin',      pct:true},
+  operatingProfitMargin:{ar:'هامش الربح التشغيلي',en:'Operating Margin',      pct:true},
+  ebitdaMargin:    {ar:'هامش EBITDA',             en:'EBITDA Margin',          pct:true},
+  roa:             {ar:'العائد على الأصول ROA',    en:'Return on Assets (ROA)', pct:true},
+  roe:             {ar:'العائد على حقوق الملكية ROE',en:'Return on Equity (ROE)',pct:true},
+  inventoryTurnover:{ar:'معدل دوران المخزون',     en:'Inventory Turnover',     pct:false},
+  totalAssetTurnover:{ar:'معدل دوران الأصول',     en:'Asset Turnover',         pct:false},
+  receivablesTurnover:{ar:'معدل دوران الذمم',     en:'Receivables Turnover',   pct:false},
+  dso:             {ar:'أيام التحصيل DSO',         en:'Days Sales Outstanding', days:true},
+  dio:             {ar:'أيام المخزون DIO',          en:'Days Inventory Outstanding',days:true},
+  dpo:             {ar:'أيام الدفع DPO',            en:'Days Payable Outstanding',days:true},
+  payablesTurnover:{ar:'معدل دوران الدائنين',     en:'Payables Turnover',      pct:false},
+  debtToEquityRatio:{ar:'الدين إلى حقوق الملكية', en:'Debt-to-Equity',        pct:false},
+  debtRatio:       {ar:'نسبة الدين',               en:'Debt Ratio',            pct:true},
+  interestCoverageRatio:{ar:'تغطية الفوائد',       en:'Interest Coverage',     pct:false},
+  roce:            {ar:'العائد على رأس المال ROCE', en:'ROCE',                  pct:true},
+  ccc:             {ar:'دورة التحويل النقدي CCC',   en:'Cash Conversion Cycle', days:true},
+  operatingCashFlowRatio:{ar:'نسبة التدفق النقدي', en:'Operating CF Ratio',    pct:false},
+};
+
+const GROUPS = {
+  ar: [
+    {title:'نسب السيولة',       keys:['currentRatio','quickRatio','cashRatio']},
+    {title:'نسب الربحية',       keys:['grossProfitMargin','netProfitMargin','operatingProfitMargin','ebitdaMargin','roa','roe']},
+    {title:'نسب النشاط',        keys:['inventoryTurnover','totalAssetTurnover','receivablesTurnover','dso','dio','dpo','payablesTurnover']},
+    {title:'الرفع والكفاءة',    keys:['debtToEquityRatio','debtRatio','interestCoverageRatio','roce','ccc','operatingCashFlowRatio']},
+  ],
+  en: [
+    {title:'Liquidity',    keys:['currentRatio','quickRatio','cashRatio']},
+    {title:'Profitability',keys:['grossProfitMargin','netProfitMargin','operatingProfitMargin','ebitdaMargin','roa','roe']},
+    {title:'Activity',     keys:['inventoryTurnover','totalAssetTurnover','receivablesTurnover','dso','dio','dpo','payablesTurnover']},
+    {title:'Leverage & Efficiency',keys:['debtToEquityRatio','debtRatio','interestCoverageRatio','roce','ccc','operatingCashFlowRatio']},
+  ]
+};
+
+function formatRatio(key, val) {
+  if (val === null || isNaN(val)) return '—';
+  const def = RATIO_DEFS[key];
+  if (def.days) return val.toFixed(1) + (currentLang==='ar'?' يوم':' d');
+  if (def.pct)  return (val*100).toFixed(2) + '%';
+  return val.toFixed(2);
+}
+
+function renderRatioGrid(r) {
+  const grid = document.getElementById('ratioGrid');
+  grid.innerHTML = '';
+  const groups = GROUPS[currentLang];
+  groups.forEach(g => {
+    const div = document.createElement('div');
+    div.className = 'ratio-group';
+    div.innerHTML = `<div class="ratio-group-title">${g.title}</div>`;
+    g.keys.forEach(k => {
+      if (r[k] === undefined) return;
+      const def = RATIO_DEFS[k];
+      const label = def[currentLang];
+      const val = formatRatio(k, r[k]);
+      const row = document.createElement('div');
+      row.className = 'ratio-row';
+      row.innerHTML = `
+        <span class="ratio-name">${label}</span>
+        <span class="ratio-val">${val}</span>
+        <button class="ratio-explain-btn" onclick="explainRatio('${k}','${val}')">
+          ${currentLang==='ar'?'شرح':'Explain'}
+        </button>`;
+      div.appendChild(row);
+    });
+    grid.appendChild(div);
+  });
+}
+
+/* ─── Charts ─── */
+const DARK_COLORS = ['#4f8ef7','#7b5cfa','#34d399','#fbbf24','#f87171','#22d3ee'];
+Chart.defaults.color = '#8b90a8';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+
+function destroyChart(id) {
+  if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; }
+}
+
+function makeBar(id, labels, data, colors) {
+  destroyChart(id);
+  const ctx = document.getElementById(id).getContext('2d');
+  chartInstances[id] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets:[{
+        data,
+        backgroundColor: colors || DARK_COLORS.slice(0,data.length),
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>`${ctx.parsed.y.toFixed(2)}`}}},
+      scales:{
+        x:{ticks:{font:{size:10},maxRotation:30}},
+        y:{ticks:{font:{size:10}}}
+      }
+    }
+  });
+}
+
+function renderCharts(r) {
+  const L = currentLang==='ar';
+  // Liquidity
+  makeBar('liquidityChart',
+    L?['المتداولة','السريعة','النقدية']:['Current','Quick','Cash'],
+    [r.currentRatio,r.quickRatio,r.cashRatio].map(v=>v?+v.toFixed(3):0),
+    ['#4f8ef7','#7b5cfa','#22d3ee']
+  );
+  // Profitability (%)
+  makeBar('profitChart',
+    L?['إجمالي','صافي','تشغيلي','EBITDA','ROA','ROE']:['Gross','Net','Operating','EBITDA','ROA','ROE'],
+    [r.grossProfitMargin,r.netProfitMargin,r.operatingProfitMargin,r.ebitdaMargin,r.roa,r.roe].map(v=>v?+(v*100).toFixed(2):0),
+    ['#34d399','#4f8ef7','#7b5cfa','#fbbf24','#22d3ee','#f87171']
+  );
+  // Activity
+  makeBar('activityChart',
+    L?['دوران مخزون','دوران أصول','دوران ذمم','DSO(يوم)','CCC(يوم)']:['Inv.Turn','Asset Turn','Rec.Turn','DSO(d)','CCC(d)'],
+    [r.inventoryTurnover,r.totalAssetTurnover,r.receivablesTurnover,r.dso,r.ccc].map(v=>v?+v.toFixed(2):0),
+    ['#fbbf24','#4f8ef7','#7b5cfa','#22d3ee','#34d399']
+  );
+  // Leverage
+  makeBar('leverageChart',
+    L?['دين/ملكية','نسبة الدين','تغطية الفائدة','ROCE']:['D/E','Debt Ratio','Int.Coverage','ROCE'],
+    [r.debtToEquityRatio,r.debtRatio?r.debtRatio*100:null,r.interestCoverageRatio,r.roce?r.roce*100:null].map(v=>v?+v.toFixed(2):0),
+    ['#f87171','#fbbf24','#34d399','#4f8ef7']
+  );
+}
+
+/* ─── AI Analysis ─── */
+async function runAIAnalysis() {
+  const btn = document.getElementById('analyzeBtn');
+  const out = document.getElementById('aiOutput');
+  btn.disabled = true;
+  out.innerHTML = `<div class="ai-loading"><div class="dot-pulse"><span></span><span></span><span></span></div><span>${currentLang==='ar'?'جاري التحليل...':'Analyzing...'}</span></div>`;
+
+  const ratioText = Object.entries(lastRatios)
+    .filter(([,v])=>v!==null&&!isNaN(v))
+    .map(([k,v])=>`${RATIO_DEFS[k]?.[currentLang]||k}: ${formatRatio(k,v)}`)
+    .join('\n');
+
+  const systemPrompt = currentLang==='ar'
+    ? `أنت محلل مالي خبير. قم بتحليل النسب المالية المقدمة وقدم تحليلاً شاملاً يشمل:
+1. نقاط القوة والضعف لكل مجموعة من النسب
+2. تفسير واضح لكل نسبة وما تعنيه
+3. مقارنة بالمعايير الصناعية العامة
+4. توصيات عملية للتحسين
+اكتب بالعربية بأسلوب مهني وواضح.`
+    : `You are an expert financial analyst. Analyze the provided financial ratios and give a comprehensive assessment covering:
+1. Strengths and weaknesses for each ratio group
+2. Clear interpretation of each ratio's significance
+3. Comparison with general industry benchmarks
+4. Practical recommendations for improvement
+Write professionally and clearly.`;
+
+  const userMsg = (currentLang==='ar'?'حلل النسب المالية التالية:\n\n':'Analyze the following financial ratios:\n\n') + ratioText;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system: systemPrompt,
+        messages:[{role:'user',content:userMsg}]
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error?.message || 'HTTP ' + res.status);
+    const text = data.content?.map(c=>c.text||'').join('') || (currentLang==='ar'?'لم يتم الحصول على رد.':'No response received.');
+    out.textContent = text;
+  } catch(err) {
+    out.textContent = (currentLang==='ar'?'خطأ: ':'Error: ') + err.message;
+  }
+  btn.disabled = false;
+}
+
+/* ─── Explain single ratio ─── */
+async function explainRatio(key, value) {
+  const def = RATIO_DEFS[key];
+  const name = def[currentLang];
+  document.getElementById('modalTitle').textContent = name;
+  document.getElementById('modalVal').textContent = value;
+  document.getElementById('modalBody').innerHTML = `
+    <div class="ai-loading">
+      <div class="dot-pulse"><span></span><span></span><span></span></div>
+      <span>${currentLang==='ar'?'جاري الشرح...':'Explaining...'}</span>
+    </div>`;
+  document.getElementById('modal').classList.add('open');
+
+  const prompt = currentLang==='ar'
+    ? `اشرح النسبة المالية "${name}" بقيمة ${value} في 3-4 جمل واضحة وبسيطة:
+1. ما هي هذه النسبة وماذا تقيس؟
+2. ماذا تعني هذه القيمة تحديداً؟
+3. هل هي جيدة أم تحتاج تحسيناً؟
+4. ما الخطوات العملية الموصى بها؟`
+    : `Explain the financial ratio "${name}" with a value of ${value} in 3-4 clear sentences:
+1. What is this ratio and what does it measure?
+2. What does this specific value mean?
+3. Is this good or does it need improvement?
+4. What practical steps are recommended?`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:400,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error?.message || 'HTTP ' + res.status);
+    const text = data.content?.map(c=>c.text||'').join('') || '—';
+    document.getElementById('modalBody').textContent = text;
+  } catch(err) {
+    document.getElementById('modalBody').textContent = (currentLang==='ar'?'خطأ: ':'Error: ') + err.message;
+  }
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+document.getElementById('modal').addEventListener('click', function(e){
+  if(e.target===this) closeModal();
+});
+
+/* ─── Init ─── */
+setLang('ar');
+</script>
+</body>
+</html>
